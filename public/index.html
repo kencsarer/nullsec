@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NullSec</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-serif;height:100vh;overflow:hidden}
@@ -146,7 +147,7 @@ body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-seri
         </div>
     </div>
     <div class="users-panel">
-        <h3>Online</h3>
+        <h3>All Members</h3>
         <div id="users-list"></div>
     </div>
 </div>
@@ -190,6 +191,20 @@ body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-seri
         <button class="btn-gray" onclick="closeAvatarModal()">Cancel</button>
     </div>
 </div></div>
+<!-- Profile Popup -->
+<div class="modal" id="profile-modal"><div class="modal-box" style="width:340px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div id="prof-avatar" style="width:50px;height:50px;border-radius:50%;background:#1a1a2a;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700"></div>
+        <div><div id="prof-name" style="font-size:16px;font-weight:700"></div><div id="prof-role" class="role-badge" style="margin-top:4px"></div></div>
+    </div>
+    <div id="prof-badges" style="margin-bottom:12px"></div>
+    <div style="font-size:12px;color:#888;display:flex;flex-direction:column;gap:6px">
+        <div>Registered: <span id="prof-created" style="color:#ccc"></span></div>
+        <div>Last seen: <span id="prof-lastseen" style="color:#ccc"></span></div>
+        <div>Status: <span id="prof-status" style="color:#ccc"></span></div>
+    </div>
+    <button class="btn-gray" onclick="closeProfile()" style="margin-top:16px;width:100%">Close</button>
+</div></div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const socket=io();
@@ -197,6 +212,8 @@ let username="",myRole="member",myColor="",myAvatar="",myBadges=[],authMode="log
 let BADGES={};
 const EMOJIS=["😀","😂","🤣","😎","🔥","💀","👀","❤️","👍","👎","💯","🎮","⚡","🚀","💬","🤡","😈","👑","💎","🗿"];
 let selectedBadge="";
+let allUsersData=[];
+let onlineUsernames=[];
 
 function switchAuthTab(m){authMode=m;document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab")[m==="login"?0:1].classList.add("active");document.getElementById("auth-btn").textContent=m==="login"?"Login":"Register";document.getElementById("auth-error").textContent="";}
 async function doAuth(){
@@ -217,13 +234,14 @@ document.getElementById("auth-password").addEventListener("keydown",e=>{if(e.key
 </script>
 <script>
 function setRoleBadge(el,role){el.textContent=role;el.className="role-badge";if(role==="owner")el.classList.add("role-owner");else if(role==="admin")el.classList.add("role-admin");else if(role==="mod")el.classList.add("role-mod");else el.style.display="none";}
+function getNameColor(role,badges){if(role==="owner")return"#ffaa00";if(role==="admin")return"#ff3366";if(role==="mod")return"#33aaff";if(badges&&badges.includes("premium"))return"#aa55ff";if(badges&&badges.includes("og"))return"#00ff88";if(badges&&badges.includes("early"))return"#ffcc00";return"#ffffff";}
 function renderBadges(badges){if(!badges||!badges.length)return"";return badges.map(b=>BADGES[b]?`<span title="${BADGES[b].label}">${BADGES[b].emoji}</span>`:`<span>${b}</span>`).join("");}
 
-socket.on("init",d=>{BADGES=d.badgeList||{};renderChannels(d.channels);renderMessages(d.messages);renderUsers(d.users);currentChannel=d.channel;initBadgeGrid();});
+socket.on("init",d=>{BADGES=d.badgeList||{};allUsersData=d.allUsers||[];renderChannels(d.channels);renderMessages(d.messages);onlineUsernames=d.users.map(u=>u.username);renderOnlineUsers(d.users);renderAllUsers();currentChannel=d.channel;initBadgeGrid();});
 socket.on("message",m=>{appendMessage(m);autoScroll();playNotif();});
 socket.on("system",t=>{const el=document.createElement("div");el.className="msg-system";el.textContent=t;document.getElementById("messages").appendChild(el);autoScroll();});
 socket.on("channelHistory",d=>{currentChannel=d.channel;document.getElementById("header-channel").textContent="# "+d.channel;document.getElementById("msg-input").placeholder="Message #"+d.channel+"...";document.getElementById("messages").innerHTML="";renderMessages(d.messages);document.querySelectorAll(".channel-btn").forEach(b=>b.classList.toggle("active",b.dataset.ch===d.channel));});
-socket.on("userlist",u=>renderUsers(u));
+socket.on("userlist",u=>{onlineUsernames=u.map(x=>x.username);renderOnlineUsers(u);renderAllUsers();});
 socket.on("channelList",ch=>renderChannels(ch));
 socket.on("typing",u=>{const el=document.getElementById("typing");el.textContent=u+" is typing...";clearTimeout(el._t);el._t=setTimeout(()=>el.textContent="",2000);});
 socket.on("messageEdited",d=>{const el=document.querySelector('[data-id="'+d.id+'"] .msg-text');if(el){el.textContent=d.text;if(!el.parentElement.querySelector(".msg-edited")){const s=document.createElement("span");s.className="msg-edited";s.textContent="(edited)";el.after(s);}}});
@@ -235,15 +253,39 @@ socket.on("adminUserList",users=>{document.getElementById("admin-users").innerHT
 <script>
 function renderChannels(channels){const el=document.getElementById("channel-list");el.innerHTML="";channels.forEach(ch=>{const btn=document.createElement("button");btn.className="channel-btn"+(ch===currentChannel?" active":"");btn.textContent="# "+ch;btn.dataset.ch=ch;btn.onclick=()=>socket.emit("switchChannel",ch);el.appendChild(btn);});}
 function renderMessages(msgs){msgs.forEach(m=>appendMessage(m));autoScroll();}
-function renderUsers(users){
+function renderOnlineUsers(users){
     const html=users.map(u=>{
         const av=u.avatar?'<img src="'+u.avatar+'">':'';
         const badges=renderBadges(u.badges);
-        return '<div class="user-item" onclick="document.getElementById(\'admin-target\').value=\''+u.username+'\'"><div class="user-avatar">'+av+'</div><span class="dot">●</span>'+u.username+'<span class="user-badges">'+badges+'</span><span class="user-role">'+(u.role!=="member"?u.role:"")+'</span></div>';
+        return '<div class="user-item" onclick="showProfile(\''+u.username+'\')"><div class="user-avatar">'+av+'</div><span class="dot">●</span>'+u.username+'<span class="user-badges">'+badges+'</span><span class="user-role">'+(u.role!=="member"?u.role:"")+'</span></div>';
     }).join("");
-    document.getElementById("users-list").innerHTML=html;
     document.getElementById("sidebar-users").innerHTML=html;
 }
+function renderAllUsers(){
+    const html=allUsersData.map(u=>{
+        const isOnline=onlineUsernames.includes(u.username);
+        const av=u.avatar?'<img src="'+u.avatar+'">':'';
+        const badges=renderBadges(u.badges);
+        const dot=isOnline?'<span style="color:#00ff88;font-size:8px">●</span>':'<span style="color:#555;font-size:8px">●</span>';
+        return '<div class="user-item" onclick="showProfile(\''+u.username+'\')"><div class="user-avatar">'+av+'</div>'+dot+u.username+'<span class="user-badges">'+badges+'</span><span class="user-role">'+(u.role!=="member"?u.role:"")+'</span></div>';
+    }).join("");
+    document.getElementById("users-list").innerHTML=html;
+}
+function showProfile(uname){
+    const u=allUsersData.find(x=>x.username===uname);
+    if(!u)return;
+    const isOnline=onlineUsernames.includes(uname);
+    document.getElementById("prof-avatar").innerHTML=u.avatar?'<img src="'+u.avatar+'" style="width:100%;height:100%;object-fit:cover">':'<span style="color:'+u.color+'">'+uname[0].toUpperCase()+'</span>';
+    document.getElementById("prof-name").textContent=uname;document.getElementById("prof-name").style.color=u.color;
+    setRoleBadge(document.getElementById("prof-role"),u.role);
+    document.getElementById("prof-badges").innerHTML=renderBadges(u.badges);
+    document.getElementById("prof-created").textContent=new Date(u.created).toLocaleDateString();
+    document.getElementById("prof-lastseen").textContent=u.lastSeen?new Date(u.lastSeen).toLocaleString():"Never";
+    document.getElementById("prof-status").textContent=isOnline?"Online":"Offline";
+    document.getElementById("prof-status").style.color=isOnline?"#00ff88":"#ff3366";
+    document.getElementById("profile-modal").classList.add("open");
+}
+function closeProfile(){document.getElementById("profile-modal").classList.remove("open");}
 function appendMessage(m){
     const msgs=document.getElementById("messages");const el=document.createElement("div");
     el.className="msg"+(m.deleted?" msg-deleted":"");el.dataset.id=m._id||"";
@@ -252,6 +294,7 @@ function appendMessage(m){
     const time=new Date(m.timestamp).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
     let roleBadge="";if(m.role&&m.role!=="member")roleBadge='<span class="msg-role role-'+m.role+'">'+m.role+"</span>";
     const badges='<span class="msg-badges">'+renderBadges(m.badges)+"</span>";
+    const nameColor=getNameColor(m.role,m.badges);
     let content="";
     if(m.deleted){content='<div class="msg-text">[Message deleted by '+m.deletedBy+"]</div>";}
     else{
@@ -266,7 +309,7 @@ function appendMessage(m){
         if(m.username===username||["owner","admin","mod"].includes(myRole))actions+='<button onclick="deleteMsg(\''+m._id+'\')">🗑️</button>';
         actions+='<button onclick="reactPicker(\''+m._id+'\')">😀</button>';
     }
-    el.innerHTML='<div class="msg-avatar" style="color:'+m.color+'">'+avHtml+'</div><div class="msg-content"><div class="msg-header"><span class="msg-name" style="color:'+m.color+'">'+escapeHtml(m.username)+"</span>"+badges+roleBadge+'<span class="msg-time">'+time+"</span></div>"+content+'</div><div class="msg-actions">'+actions+"</div>";
+    el.innerHTML='<div class="msg-avatar" style="color:'+nameColor+'">'+avHtml+'</div><div class="msg-content"><div class="msg-header"><span class="msg-name" style="color:'+nameColor+'">'+escapeHtml(m.username)+"</span>"+badges+roleBadge+'<span class="msg-time">'+time+"</span></div>"+content+'</div><div class="msg-actions">'+actions+"</div>";
     msgs.appendChild(el);
 }
 function renderReactions(id,reactions){let h="";for(const[emoji,users]of Object.entries(reactions||{})){if(!users.length)continue;const mine=users.includes(username)?"mine":"";h+='<span class="reaction '+mine+'" onclick="socket.emit(\'react\',{id:\''+id+"',emoji:'"+emoji+"'})\">"+emoji+" "+users.length+"</span>";}return h;}
