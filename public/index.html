@@ -7,17 +7,27 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-serif;height:100vh;overflow:hidden}
-.login-screen{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:20px}
-.login-screen h1{font-size:42px;font-weight:900;color:#00ff88;text-shadow:0 0 20px rgba(0,255,136,.3)}
-.login-screen p{color:#555;font-size:13px}
-.login-screen input{background:#14141f;border:1px solid #2a2a3a;padding:12px 20px;border-radius:8px;color:#fff;font-size:15px;width:280px;outline:none}
-.login-screen input:focus{border-color:#00ff88}
-.login-screen button{background:linear-gradient(135deg,#00cc6a,#00ff88);border:none;padding:12px 40px;border-radius:8px;color:#000;font-weight:700;font-size:14px;cursor:pointer}
+.auth-screen{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}
+.auth-screen h1{font-size:42px;font-weight:900;color:#00ff88;text-shadow:0 0 20px rgba(0,255,136,.3)}
+.auth-screen p{color:#555;font-size:13px;margin-bottom:10px}
+.auth-screen input{background:#14141f;border:1px solid #2a2a3a;padding:12px 20px;border-radius:8px;color:#fff;font-size:15px;width:280px;outline:none}
+.auth-screen input:focus{border-color:#00ff88}
+.auth-screen .btn{background:linear-gradient(135deg,#00cc6a,#00ff88);border:none;padding:12px 40px;border-radius:8px;color:#000;font-weight:700;font-size:14px;cursor:pointer;width:280px}
+.auth-screen .btn-secondary{background:#1a1a2a;border:1px solid #2a2a3a;color:#888}
+.auth-screen .btn-secondary:hover{border-color:#00ff88;color:#00ff88}
+.auth-screen .error{color:#ff4444;font-size:12px;min-height:18px}
+.auth-screen .tabs{display:flex;gap:0;margin-bottom:10px}
+.auth-screen .tab{padding:10px 24px;background:#14141f;border:1px solid #2a2a3a;color:#666;cursor:pointer;font-size:13px;font-weight:600}
+.auth-screen .tab:first-child{border-radius:8px 0 0 8px}
+.auth-screen .tab:last-child{border-radius:0 8px 8px 0}
+.auth-screen .tab.active{background:#1a2a1f;border-color:#00ff88;color:#00ff88}
 .app{display:none;height:100vh;grid-template-columns:220px 1fr 200px;grid-template-rows:50px 1fr}
 .app.active{display:grid}
 .header{grid-column:1/-1;background:#0d0d14;border-bottom:1px solid #1a1a2a;display:flex;align-items:center;padding:0 20px;gap:12px}
 .header h1{font-size:16px;color:#00ff88;font-weight:800}
 .header .channel-name{color:#666;font-size:13px;margin-left:8px}
+.header .user-info{margin-left:auto;font-size:12px;color:#555}
+.header .user-info span{color:#00ff88}
 .sidebar{background:#0d0d14;border-right:1px solid #1a1a2a;padding:12px;overflow-y:auto}
 .sidebar h3{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#444;margin:16px 0 8px}
 .channel-btn{display:block;width:100%;padding:8px 12px;background:transparent;border:none;color:#888;font-size:13px;text-align:left;border-radius:6px;cursor:pointer;margin:2px 0}
@@ -53,17 +63,24 @@ body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-seri
 </style>
 </head>
 <body>
-<div class="login-screen" id="login">
+<div class="auth-screen" id="auth">
     <h1>NullSec</h1>
     <p>encrypted communications</p>
-    <input type="text" id="username-input" placeholder="Enter username..." maxlength="20" autocomplete="off">
-    <button onclick="joinChat()">Connect</button>
+    <div class="tabs">
+        <div class="tab active" onclick="switchAuthTab('login')">Login</div>
+        <div class="tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+    <input type="text" id="auth-username" placeholder="Username" maxlength="20" autocomplete="off">
+    <input type="password" id="auth-password" placeholder="Password" maxlength="50" autocomplete="off">
+    <div class="error" id="auth-error"></div>
+    <button class="btn" id="auth-btn" onclick="doAuth()">Login</button>
 </div>
 
 <div class="app" id="app">
     <div class="header">
         <h1>NullSec</h1>
         <span class="channel-name" id="header-channel"># general</span>
+        <div class="user-info">Logged in as <span id="header-user">-</span></div>
     </div>
     <div class="sidebar">
         <h3>Channels</h3>
@@ -91,19 +108,61 @@ body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-seri
 <script>
 const socket = io();
 let username = '';
-let currentChannel = 'general';
+let authMode = 'login';
 
-function joinChat() {
-    username = document.getElementById('username-input').value.trim();
-    if (!username) return;
-    document.getElementById('login').style.display = 'none';
-    document.getElementById('app').classList.add('active');
-    socket.emit('join', username);
+function switchAuthTab(mode) {
+    authMode = mode;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab')[mode === 'login' ? 0 : 1].classList.add('active');
+    document.getElementById('auth-btn').textContent = mode === 'login' ? 'Login' : 'Register';
+    document.getElementById('auth-error').textContent = '';
 }
 
-document.getElementById('username-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') joinChat();
+async function doAuth() {
+    const user = document.getElementById('auth-username').value.trim();
+    const pass = document.getElementById('auth-password').value;
+    const errorEl = document.getElementById('auth-error');
+    errorEl.textContent = '';
+
+    if (!user || !pass) { errorEl.textContent = 'Fill in both fields'; return; }
+
+    try {
+        const res = await fetch('/' + authMode, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if (data.error) { errorEl.textContent = data.error; return; }
+
+        username = data.username;
+        localStorage.setItem('nullsec_user', user);
+        localStorage.setItem('nullsec_pass', pass);
+
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('app').classList.add('active');
+        document.getElementById('header-user').textContent = username;
+        socket.emit('join', { username });
+    } catch (e) {
+        errorEl.textContent = 'Connection error';
+    }
+}
+
+// Auto-login if saved
+window.addEventListener('load', async () => {
+    const savedUser = localStorage.getItem('nullsec_user');
+    const savedPass = localStorage.getItem('nullsec_pass');
+    if (savedUser && savedPass) {
+        document.getElementById('auth-username').value = savedUser;
+        document.getElementById('auth-password').value = savedPass;
+        await doAuth();
+    }
 });
+
+document.getElementById('auth-username').addEventListener('keydown', (e) => { if (e.key === 'Enter') doAuth(); });
+document.getElementById('auth-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doAuth(); });
+
+let currentChannel = 'general';
 
 socket.on('init', (data) => {
     renderChannels(data.channels);
@@ -133,15 +192,12 @@ socket.on('channelHistory', (data) => {
     document.getElementById('msg-input').placeholder = 'Message #' + data.channel + '...';
     document.getElementById('messages').innerHTML = '';
     renderMessages(data.messages);
-    // Update active channel button
     document.querySelectorAll('.channel-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.channel === data.channel);
     });
 });
 
-socket.on('userlist', (users) => {
-    renderUsers(users);
-});
+socket.on('userlist', (users) => { renderUsers(users); });
 
 socket.on('typing', (user) => {
     const el = document.getElementById('typing');
@@ -158,9 +214,7 @@ function renderChannels(channels) {
         btn.className = 'channel-btn' + (ch === currentChannel ? ' active' : '');
         btn.textContent = '# ' + ch;
         btn.dataset.channel = ch;
-        btn.onclick = () => {
-            socket.emit('switchChannel', ch);
-        };
+        btn.onclick = () => { socket.emit('switchChannel', ch); };
         el.appendChild(btn);
     });
 }
@@ -172,11 +226,9 @@ function renderMessages(messages) {
 }
 
 function renderUsers(users) {
-    const el1 = document.getElementById('users-list');
-    const el2 = document.getElementById('sidebar-users');
     const html = users.map(u => `<div class="user-item">${u}</div>`).join('');
-    el1.innerHTML = html;
-    el2.innerHTML = html;
+    document.getElementById('users-list').innerHTML = html;
+    document.getElementById('sidebar-users').innerHTML = html;
 }
 
 function appendMessage(msg) {
@@ -221,9 +273,7 @@ document.getElementById('img-input').addEventListener('change', async (e) => {
     formData.append('image', file);
     const res = await fetch('/upload', { method: 'POST', body: formData });
     const data = await res.json();
-    if (data.url) {
-        socket.emit('message', { text: '', image: data.url });
-    }
+    if (data.url) socket.emit('message', { text: '', image: data.url });
     e.target.value = '';
 });
 
