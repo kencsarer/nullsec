@@ -149,10 +149,12 @@ io.on("connection", (socket) => {
         const channels = await Channel.find().sort({ created: 1 });
         const messages = await Message.find({ channel: currentChannel }).sort({ timestamp: -1 }).limit(50);
         messages.reverse();
+        const allUsers = await User.find().select("username color role avatar badges banned muted created lastSeen").sort({ created: 1 });
         socket.emit("init", {
             channels: channels.map(c => c.name),
             messages: messages.map(m => ({ _id: m._id, username: m.username, color: m.color, role: m.role, avatar: m.avatar, badges: m.badges, text: m.text, image: m.image, edited: m.edited, deleted: m.deleted, deletedBy: m.deletedBy, reactions: m.reactions, timestamp: m.timestamp })),
             users: Array.from(onlineUsers.values()),
+            allUsers: allUsers.map(u => ({ username: u.username, color: u.color, role: u.role, avatar: u.avatar, badges: u.badges, banned: u.banned, created: u.created, lastSeen: u.lastSeen })),
             channel: currentChannel,
             username: user.username, color: user.color, role: user.role, avatar: user.avatar, badges: user.badges,
             badgeList: BADGES
