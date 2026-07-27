@@ -13,89 +13,136 @@ body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-seri
 .auth-screen input{background:#14141f;border:1px solid #2a2a3a;padding:12px 20px;border-radius:8px;color:#fff;font-size:15px;width:280px;outline:none}
 .auth-screen input:focus{border-color:#00ff88}
 .auth-screen .btn{background:linear-gradient(135deg,#00cc6a,#00ff88);border:none;padding:12px 40px;border-radius:8px;color:#000;font-weight:700;font-size:14px;cursor:pointer;width:280px}
-.auth-screen .btn-secondary{background:#1a1a2a;border:1px solid #2a2a3a;color:#888}
-.auth-screen .btn-secondary:hover{border-color:#00ff88;color:#00ff88}
 .auth-screen .error{color:#ff4444;font-size:12px;min-height:18px}
 .auth-screen .tabs{display:flex;gap:0;margin-bottom:10px}
 .auth-screen .tab{padding:10px 24px;background:#14141f;border:1px solid #2a2a3a;color:#666;cursor:pointer;font-size:13px;font-weight:600}
 .auth-screen .tab:first-child{border-radius:8px 0 0 8px}
 .auth-screen .tab:last-child{border-radius:0 8px 8px 0}
 .auth-screen .tab.active{background:#1a2a1f;border-color:#00ff88;color:#00ff88}
-.app{display:none;height:100vh;grid-template-columns:220px 1fr 200px;grid-template-rows:50px 1fr}
+.app{display:none;height:100vh;grid-template-columns:220px 1fr 220px;grid-template-rows:50px 1fr}
 .app.active{display:grid}
+</style>
+<style>
 .header{grid-column:1/-1;background:#0d0d14;border-bottom:1px solid #1a1a2a;display:flex;align-items:center;padding:0 20px;gap:12px}
 .header h1{font-size:16px;color:#00ff88;font-weight:800}
-.header .channel-name{color:#666;font-size:13px;margin-left:8px}
-.header .user-info{margin-left:auto;font-size:12px;color:#555}
+.header .channel-name{color:#666;font-size:13px}
+.header .user-info{margin-left:auto;font-size:12px;color:#555;display:flex;align-items:center;gap:8px}
 .header .user-info span{color:#00ff88}
+.role-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;text-transform:uppercase}
+.role-owner{background:#ff880030;color:#ffaa00;border:1px solid #ffaa0050}
+.role-admin{background:#ff336630;color:#ff3366;border:1px solid #ff336650}
+.role-mod{background:#33aaff30;color:#33aaff;border:1px solid #33aaff50}
 .sidebar{background:#0d0d14;border-right:1px solid #1a1a2a;padding:12px;overflow-y:auto}
 .sidebar h3{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#444;margin:16px 0 8px}
 .channel-btn{display:block;width:100%;padding:8px 12px;background:transparent;border:none;color:#888;font-size:13px;text-align:left;border-radius:6px;cursor:pointer;margin:2px 0}
 .channel-btn:hover{background:#1a1a2a;color:#ccc}
 .channel-btn.active{background:#1a2a1f;color:#00ff88}
-.chat-area{display:flex;flex-direction:column;overflow:hidden}
-.messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
-.msg{display:flex;gap:10px;padding:6px 0}
-.msg-avatar{width:36px;height:36px;border-radius:50%;background:#1a1a2a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.chat-area{display:flex;flex-direction:column;overflow:hidden;position:relative}
+.messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:4px}
+.msg{display:flex;gap:10px;padding:6px 8px;border-radius:6px;position:relative}
+.msg:hover{background:#ffffff05}
+.msg:hover .msg-actions{display:flex}
+.msg-deleted{opacity:.7;border-left:3px solid #ff3366;padding-left:12px}
+.msg-deleted .msg-text{color:#ff3366;font-style:italic}
+.msg-avatar{width:36px;height:36px;border-radius:50%;background:#1a1a2a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;overflow:hidden}
+.msg-avatar img{width:100%;height:100%;object-fit:cover}
 .msg-content{flex:1}
-.msg-header{display:flex;align-items:baseline;gap:8px}
+.msg-header{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .msg-name{font-weight:700;font-size:13px}
+.msg-badges{display:flex;gap:2px}
+.msg-badges span{font-size:12px;cursor:default}
+.msg-role{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
 .msg-time{font-size:10px;color:#444}
 .msg-text{font-size:14px;color:#ddd;margin-top:3px;word-break:break-word}
+.msg-edited{font-size:10px;color:#555;font-style:italic}
 .msg-img{max-width:300px;max-height:200px;border-radius:8px;margin-top:6px;cursor:pointer}
-.msg-system{color:#555;font-size:12px;font-style:italic;padding:4px 0}
+.msg-system{color:#555;font-size:12px;font-style:italic;padding:4px 46px}
+.msg-actions{display:none;position:absolute;right:8px;top:4px;gap:4px}
+.msg-actions button{background:#1a1a2a;border:1px solid #2a2a3a;color:#888;font-size:12px;padding:2px 6px;border-radius:4px;cursor:pointer}
+.msg-actions button:hover{background:#2a2a3a;color:#fff}
+.msg-reactions{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.reaction{background:#1a1a2a;border:1px solid #2a2a3a;border-radius:12px;padding:2px 8px;font-size:12px;cursor:pointer}
+.reaction:hover{border-color:#00ff88}
+.reaction.mine{border-color:#00ff88;background:#00ff8815}
+</style>
+<style>
 .input-area{padding:12px 16px;border-top:1px solid #1a1a2a;display:flex;gap:8px;align-items:center}
 .input-area input[type=text]{flex:1;background:#14141f;border:1px solid #2a2a3a;padding:10px 14px;border-radius:8px;color:#fff;font-size:14px;outline:none}
 .input-area input[type=text]:focus{border-color:#00ff88}
-.input-area label{cursor:pointer;padding:8px;border-radius:6px;background:#1a1a2a;color:#666;font-size:18px}
-.input-area label:hover{background:#2a2a3a;color:#00ff88}
+.input-area label,.input-area .emoji-btn{cursor:pointer;padding:8px;border-radius:6px;background:#1a1a2a;color:#666;font-size:18px;border:none}
+.input-area label:hover,.input-area .emoji-btn:hover{background:#2a2a3a;color:#00ff88}
 .input-area input[type=file]{display:none}
-.input-area button{background:#00ff88;border:none;padding:10px 16px;border-radius:8px;color:#000;font-weight:700;cursor:pointer}
-.users-panel{background:#0d0d14;border-left:1px solid #1a1a2a;padding:12px}
+.input-area button.send{background:#00ff88;border:none;padding:10px 16px;border-radius:8px;color:#000;font-weight:700;cursor:pointer}
+.users-panel{background:#0d0d14;border-left:1px solid #1a1a2a;padding:12px;overflow-y:auto}
 .users-panel h3{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#444;margin-bottom:10px}
-.user-item{padding:6px 8px;font-size:12px;color:#888;border-radius:4px}
-.user-item::before{content:"●";color:#00ff88;margin-right:6px;font-size:8px}
+.user-item{padding:6px 8px;font-size:12px;color:#888;border-radius:4px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.user-item:hover{background:#1a1a2a}
+.user-item .user-avatar{width:20px;height:20px;border-radius:50%;background:#2a2a3a;overflow:hidden;flex-shrink:0}
+.user-item .user-avatar img{width:100%;height:100%;object-fit:cover}
+.user-item .dot{color:#00ff88;font-size:8px}
+.user-item .user-role{font-size:9px;margin-left:auto;opacity:.6}
+.user-item .user-badges{display:flex;gap:1px;margin-left:4px}
+.user-item .user-badges span{font-size:10px}
 .typing-indicator{font-size:11px;color:#555;padding:4px 16px;height:20px}
-@media(max-width:768px){
-    .app.active{grid-template-columns:1fr;grid-template-rows:50px 1fr}
-    .sidebar,.users-panel{display:none}
-}
+.admin-btn{display:block;width:100%;padding:8px;margin-top:12px;background:#ff336620;border:1px solid #ff336650;border-radius:6px;color:#ff3366;font-size:11px;font-weight:600;cursor:pointer;text-align:center}
+.admin-btn:hover{background:#ff336640}
+.avatar-btn{display:block;width:100%;padding:8px;margin-top:6px;background:#33aaff20;border:1px solid #33aaff50;border-radius:6px;color:#33aaff;font-size:11px;font-weight:600;cursor:pointer;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:999}
+.modal.open{display:flex}
+.modal-box{background:#12121a;border:1px solid #2a2a3a;border-radius:12px;padding:24px;width:450px;max-height:80vh;overflow-y:auto}
+.modal-box h2{font-size:16px;color:#00ff88;margin-bottom:16px}
+.modal-box input,.modal-box select{width:100%;background:#14141f;border:1px solid #2a2a3a;padding:10px;border-radius:6px;color:#fff;margin:6px 0;outline:none}
+.modal-box button{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-weight:600;margin:4px}
+.modal-box .btn-green{background:#00ff88;color:#000}
+.modal-box .btn-red{background:#ff3366;color:#fff}
+.modal-box .btn-gray{background:#2a2a3a;color:#aaa}
+.modal-box .btn-blue{background:#33aaff;color:#000}
+.modal-user{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #1a1a2a;font-size:12px}
+.badge-grid{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.badge-item{padding:4px 10px;background:#1a1a2a;border:1px solid #2a2a3a;border-radius:6px;font-size:12px;cursor:pointer}
+.badge-item:hover{border-color:#00ff88}
+.badge-item.active{background:#00ff8820;border-color:#00ff88}
+.emoji-picker{position:absolute;bottom:60px;left:60px;background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:8px;display:none;flex-wrap:wrap;gap:4px;width:220px;z-index:99}
+.emoji-picker.open{display:flex}
+.emoji-picker span{font-size:20px;cursor:pointer;padding:4px;border-radius:4px}
+.emoji-picker span:hover{background:#2a2a3a}
+@media(max-width:768px){.app.active{grid-template-columns:1fr;grid-template-rows:50px 1fr}.sidebar,.users-panel{display:none}}
 </style>
 </head>
 <body>
 <div class="auth-screen" id="auth">
     <h1>NullSec</h1>
     <p>encrypted communications</p>
-    <div class="tabs">
-        <div class="tab active" onclick="switchAuthTab('login')">Login</div>
-        <div class="tab" onclick="switchAuthTab('register')">Register</div>
-    </div>
+    <div class="tabs"><div class="tab active" onclick="switchAuthTab('login')">Login</div><div class="tab" onclick="switchAuthTab('register')">Register</div></div>
     <input type="text" id="auth-username" placeholder="Username" maxlength="20" autocomplete="off">
-    <input type="password" id="auth-password" placeholder="Password" maxlength="50" autocomplete="off">
+    <input type="password" id="auth-password" placeholder="Password" maxlength="50">
     <div class="error" id="auth-error"></div>
     <button class="btn" id="auth-btn" onclick="doAuth()">Login</button>
 </div>
-
 <div class="app" id="app">
     <div class="header">
         <h1>NullSec</h1>
         <span class="channel-name" id="header-channel"># general</span>
-        <div class="user-info">Logged in as <span id="header-user">-</span></div>
+        <div class="user-info"><span id="header-user">-</span><span class="role-badge" id="header-role"></span></div>
     </div>
     <div class="sidebar">
         <h3>Channels</h3>
         <div id="channel-list"></div>
         <h3>Online</h3>
         <div id="sidebar-users"></div>
+        <button class="avatar-btn" onclick="openAvatarModal()">Set Avatar</button>
+        <button class="admin-btn" id="admin-btn" style="display:none" onclick="openAdmin()">Admin Panel</button>
     </div>
     <div class="chat-area">
         <div class="messages" id="messages"></div>
         <div class="typing-indicator" id="typing"></div>
+        <div class="emoji-picker" id="emoji-picker"></div>
         <div class="input-area">
             <label for="img-input">📎</label>
-            <input type="file" id="img-input" accept="image/*">
+            <input type="file" id="img-input" accept="image/*,image/gif">
+            <button class="emoji-btn" onclick="toggleEmoji()">😀</button>
             <input type="text" id="msg-input" placeholder="Message #general..." autocomplete="off">
-            <button onclick="sendMessage()">Send</button>
+            <button class="send" onclick="sendMessage()">Send</button>
         </div>
     </div>
     <div class="users-panel">
@@ -103,185 +150,175 @@ body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,sans-seri
         <div id="users-list"></div>
     </div>
 </div>
-
+<!-- Admin Modal -->
+<div class="modal" id="admin-modal"><div class="modal-box">
+    <h2>Admin Panel</h2>
+    <input id="admin-target" placeholder="Username...">
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin:8px 0">
+        <button class="btn-green" onclick="adminAction('setRole','owner')">Owner</button>
+        <button class="btn-green" onclick="adminAction('setRole','admin')">Admin</button>
+        <button class="btn-blue" onclick="adminAction('setRole','mod')">Mod</button>
+        <button class="btn-gray" onclick="adminAction('setRole','member')">Member</button>
+        <button class="btn-red" onclick="adminAction('ban')">Ban</button>
+        <button class="btn-gray" onclick="adminAction('unban')">Unban</button>
+        <button class="btn-red" onclick="adminAction('mute')">Mute</button>
+        <button class="btn-gray" onclick="adminAction('unmute')">Unmute</button>
+    </div>
+    <h3 style="color:#00ff88;font-size:11px;margin:12px 0 6px">Badges</h3>
+    <div class="badge-grid" id="badge-grid"></div>
+    <div style="display:flex;gap:4px;margin:6px 0">
+        <button class="btn-green" onclick="adminAddBadge()">Give Badge</button>
+        <button class="btn-red" onclick="adminRemoveBadge()">Remove Badge</button>
+    </div>
+    <h3 style="color:#555;font-size:11px;margin:12px 0 6px">Channels</h3>
+    <input id="admin-channel" placeholder="Channel name...">
+    <div style="display:flex;gap:4px;margin:6px 0">
+        <button class="btn-green" onclick="adminCreateChannel()">Create</button>
+        <button class="btn-red" onclick="adminDeleteChannel()">Delete</button>
+    </div>
+    <h3 style="color:#555;font-size:11px;margin:12px 0 6px">All Users</h3>
+    <div id="admin-users"></div>
+    <button class="btn-gray" onclick="closeAdmin()" style="margin-top:12px;width:100%">Close</button>
+</div></div>
+<!-- Avatar Modal -->
+<div class="modal" id="avatar-modal"><div class="modal-box">
+    <h2>Set Avatar</h2>
+    <p style="color:#666;font-size:12px;margin-bottom:12px">Upload image or GIF (max 8MB)</p>
+    <input type="file" id="avatar-file" accept="image/*,image/gif">
+    <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-green" onclick="uploadAvatar()">Upload</button>
+        <button class="btn-gray" onclick="closeAvatarModal()">Cancel</button>
+    </div>
+</div></div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
-let username = '';
-let authMode = 'login';
+const socket=io();
+let username="",myRole="member",myColor="",myAvatar="",myBadges=[],authMode="login",currentChannel="general";
+let BADGES={};
+const EMOJIS=["😀","😂","🤣","😎","🔥","💀","👀","❤️","👍","👎","💯","🎮","⚡","🚀","💬","🤡","😈","👑","💎","🗿"];
+let selectedBadge="";
 
-function switchAuthTab(mode) {
-    authMode = mode;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab')[mode === 'login' ? 0 : 1].classList.add('active');
-    document.getElementById('auth-btn').textContent = mode === 'login' ? 'Login' : 'Register';
-    document.getElementById('auth-error').textContent = '';
+function switchAuthTab(m){authMode=m;document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab")[m==="login"?0:1].classList.add("active");document.getElementById("auth-btn").textContent=m==="login"?"Login":"Register";document.getElementById("auth-error").textContent="";}
+async function doAuth(){
+    const u=document.getElementById("auth-username").value.trim(),p=document.getElementById("auth-password").value,err=document.getElementById("auth-error");err.textContent="";
+    if(!u||!p){err.textContent="Fill both fields";return;}
+    try{const res=await fetch("/"+authMode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});const d=await res.json();
+    if(d.error){err.textContent=d.error;return;}
+    username=d.username;myRole=d.role||"member";myColor=d.color;myAvatar=d.avatar||"";myBadges=d.badges||[];
+    localStorage.setItem("ns_u",u);localStorage.setItem("ns_p",p);
+    document.getElementById("auth").style.display="none";document.getElementById("app").classList.add("active");
+    document.getElementById("header-user").textContent=username;setRoleBadge(document.getElementById("header-role"),myRole);
+    if(["owner","admin","mod"].includes(myRole))document.getElementById("admin-btn").style.display="block";
+    socket.emit("join",{username});}catch(e){err.textContent="Connection error";}
 }
+window.addEventListener("load",()=>{const u=localStorage.getItem("ns_u"),p=localStorage.getItem("ns_p");if(u&&p){document.getElementById("auth-username").value=u;document.getElementById("auth-password").value=p;doAuth();}});
+document.getElementById("auth-username").addEventListener("keydown",e=>{if(e.key==="Enter")doAuth();});
+document.getElementById("auth-password").addEventListener("keydown",e=>{if(e.key==="Enter")doAuth();});
+</script>
+<script>
+function setRoleBadge(el,role){el.textContent=role;el.className="role-badge";if(role==="owner")el.classList.add("role-owner");else if(role==="admin")el.classList.add("role-admin");else if(role==="mod")el.classList.add("role-mod");else el.style.display="none";}
+function renderBadges(badges){if(!badges||!badges.length)return"";return badges.map(b=>BADGES[b]?`<span title="${BADGES[b].label}">${BADGES[b].emoji}</span>`:`<span>${b}</span>`).join("");}
 
-async function doAuth() {
-    const user = document.getElementById('auth-username').value.trim();
-    const pass = document.getElementById('auth-password').value;
-    const errorEl = document.getElementById('auth-error');
-    errorEl.textContent = '';
-
-    if (!user || !pass) { errorEl.textContent = 'Fill in both fields'; return; }
-
-    try {
-        const res = await fetch('/' + authMode, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
-        });
-        const data = await res.json();
-        if (data.error) { errorEl.textContent = data.error; return; }
-
-        username = data.username;
-        localStorage.setItem('nullsec_user', user);
-        localStorage.setItem('nullsec_pass', pass);
-
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('app').classList.add('active');
-        document.getElementById('header-user').textContent = username;
-        socket.emit('join', { username });
-    } catch (e) {
-        errorEl.textContent = 'Connection error';
+socket.on("init",d=>{BADGES=d.badgeList||{};renderChannels(d.channels);renderMessages(d.messages);renderUsers(d.users);currentChannel=d.channel;initBadgeGrid();});
+socket.on("message",m=>{appendMessage(m);autoScroll();playNotif();});
+socket.on("system",t=>{const el=document.createElement("div");el.className="msg-system";el.textContent=t;document.getElementById("messages").appendChild(el);autoScroll();});
+socket.on("channelHistory",d=>{currentChannel=d.channel;document.getElementById("header-channel").textContent="# "+d.channel;document.getElementById("msg-input").placeholder="Message #"+d.channel+"...";document.getElementById("messages").innerHTML="";renderMessages(d.messages);document.querySelectorAll(".channel-btn").forEach(b=>b.classList.toggle("active",b.dataset.ch===d.channel));});
+socket.on("userlist",u=>renderUsers(u));
+socket.on("channelList",ch=>renderChannels(ch));
+socket.on("typing",u=>{const el=document.getElementById("typing");el.textContent=u+" is typing...";clearTimeout(el._t);el._t=setTimeout(()=>el.textContent="",2000);});
+socket.on("messageEdited",d=>{const el=document.querySelector('[data-id="'+d.id+'"] .msg-text');if(el){el.textContent=d.text;if(!el.parentElement.querySelector(".msg-edited")){const s=document.createElement("span");s.className="msg-edited";s.textContent="(edited)";el.after(s);}}});
+socket.on("messageDeleted",d=>{const el=document.querySelector('[data-id="'+d.id+'"]');if(el){el.classList.add("msg-deleted");const txt=el.querySelector(".msg-text");if(txt)txt.textContent="[Message deleted by "+d.deletedBy+"]";const acts=el.querySelector(".msg-actions");if(acts)acts.remove();const img=el.querySelector(".msg-img");if(img)img.remove();const reacts=el.querySelector(".msg-reactions");if(reacts)reacts.remove();}});
+socket.on("messageReacted",d=>{const el=document.querySelector('[data-id="'+d.id+'"] .msg-reactions');if(el)el.innerHTML=renderReactions(d.id,d.reactions);});
+socket.on("kicked",msg=>{alert(msg);localStorage.clear();location.reload();});
+socket.on("adminUserList",users=>{document.getElementById("admin-users").innerHTML=users.map(u=>'<div class="modal-user"><span>'+u.username+" ["+u.role+"] "+(u.badges||[]).map(b=>BADGES[b]?BADGES[b].emoji:"").join("")+(u.banned?" BANNED":"")+(u.muted?" MUTED":"")+"</span></div>").join("");});
+</script>
+<script>
+function renderChannels(channels){const el=document.getElementById("channel-list");el.innerHTML="";channels.forEach(ch=>{const btn=document.createElement("button");btn.className="channel-btn"+(ch===currentChannel?" active":"");btn.textContent="# "+ch;btn.dataset.ch=ch;btn.onclick=()=>socket.emit("switchChannel",ch);el.appendChild(btn);});}
+function renderMessages(msgs){msgs.forEach(m=>appendMessage(m));autoScroll();}
+function renderUsers(users){
+    const html=users.map(u=>{
+        const av=u.avatar?'<img src="'+u.avatar+'">':'';
+        const badges=renderBadges(u.badges);
+        return '<div class="user-item" onclick="document.getElementById(\'admin-target\').value=\''+u.username+'\'"><div class="user-avatar">'+av+'</div><span class="dot">●</span>'+u.username+'<span class="user-badges">'+badges+'</span><span class="user-role">'+(u.role!=="member"?u.role:"")+'</span></div>';
+    }).join("");
+    document.getElementById("users-list").innerHTML=html;
+    document.getElementById("sidebar-users").innerHTML=html;
+}
+function appendMessage(m){
+    const msgs=document.getElementById("messages");const el=document.createElement("div");
+    el.className="msg"+(m.deleted?" msg-deleted":"");el.dataset.id=m._id||"";
+    const av=m.avatar?'<img src="'+m.avatar+'">':m.username[0].toUpperCase();
+    const avHtml=m.avatar?'<img src="'+m.avatar+'">':'<span>'+m.username[0].toUpperCase()+'</span>';
+    const time=new Date(m.timestamp).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    let roleBadge="";if(m.role&&m.role!=="member")roleBadge='<span class="msg-role role-'+m.role+'">'+m.role+"</span>";
+    const badges='<span class="msg-badges">'+renderBadges(m.badges)+"</span>";
+    let content="";
+    if(m.deleted){content='<div class="msg-text">[Message deleted by '+m.deletedBy+"]</div>";}
+    else{
+        if(m.text)content+='<div class="msg-text">'+escapeHtml(m.text)+"</div>";
+        if(m.edited)content+='<span class="msg-edited">(edited)</span>';
+        if(m.image)content+='<img class="msg-img" src="'+m.image+'" onclick="window.open(this.src)">';
+        content+='<div class="msg-reactions">'+renderReactions(m._id,m.reactions||{})+"</div>";
     }
-}
-
-// Auto-login if saved
-window.addEventListener('load', async () => {
-    const savedUser = localStorage.getItem('nullsec_user');
-    const savedPass = localStorage.getItem('nullsec_pass');
-    if (savedUser && savedPass) {
-        document.getElementById('auth-username').value = savedUser;
-        document.getElementById('auth-password').value = savedPass;
-        await doAuth();
+    let actions="";
+    if(!m.deleted){
+        if(m.username===username)actions+='<button onclick="editMsg(\''+m._id+'\')">✏️</button>';
+        if(m.username===username||["owner","admin","mod"].includes(myRole))actions+='<button onclick="deleteMsg(\''+m._id+'\')">🗑️</button>';
+        actions+='<button onclick="reactPicker(\''+m._id+'\')">😀</button>';
     }
-});
-
-document.getElementById('auth-username').addEventListener('keydown', (e) => { if (e.key === 'Enter') doAuth(); });
-document.getElementById('auth-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doAuth(); });
-
-let currentChannel = 'general';
-
-socket.on('init', (data) => {
-    renderChannels(data.channels);
-    renderMessages(data.messages);
-    renderUsers(data.users);
-    currentChannel = data.channel;
-});
-
-socket.on('message', (msg) => {
-    appendMessage(msg);
-    const msgs = document.getElementById('messages');
-    msgs.scrollTop = msgs.scrollHeight;
-});
-
-socket.on('system', (text) => {
-    const msgs = document.getElementById('messages');
-    const el = document.createElement('div');
-    el.className = 'msg-system';
-    el.textContent = text;
-    msgs.appendChild(el);
-    msgs.scrollTop = msgs.scrollHeight;
-});
-
-socket.on('channelHistory', (data) => {
-    currentChannel = data.channel;
-    document.getElementById('header-channel').textContent = '# ' + data.channel;
-    document.getElementById('msg-input').placeholder = 'Message #' + data.channel + '...';
-    document.getElementById('messages').innerHTML = '';
-    renderMessages(data.messages);
-    document.querySelectorAll('.channel-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.channel === data.channel);
-    });
-});
-
-socket.on('userlist', (users) => { renderUsers(users); });
-
-socket.on('typing', (user) => {
-    const el = document.getElementById('typing');
-    el.textContent = user + ' is typing...';
-    clearTimeout(el._timeout);
-    el._timeout = setTimeout(() => { el.textContent = ''; }, 2000);
-});
-
-function renderChannels(channels) {
-    const el = document.getElementById('channel-list');
-    el.innerHTML = '';
-    channels.forEach(ch => {
-        const btn = document.createElement('button');
-        btn.className = 'channel-btn' + (ch === currentChannel ? ' active' : '');
-        btn.textContent = '# ' + ch;
-        btn.dataset.channel = ch;
-        btn.onclick = () => { socket.emit('switchChannel', ch); };
-        el.appendChild(btn);
-    });
-}
-
-function renderMessages(messages) {
-    messages.forEach(msg => appendMessage(msg));
-    const msgs = document.getElementById('messages');
-    msgs.scrollTop = msgs.scrollHeight;
-}
-
-function renderUsers(users) {
-    const html = users.map(u => `<div class="user-item">${u}</div>`).join('');
-    document.getElementById('users-list').innerHTML = html;
-    document.getElementById('sidebar-users').innerHTML = html;
-}
-
-function appendMessage(msg) {
-    const msgs = document.getElementById('messages');
-    const el = document.createElement('div');
-    el.className = 'msg';
-    const initial = msg.username[0].toUpperCase();
-    let content = '';
-    if (msg.text) content += `<div class="msg-text">${escapeHtml(msg.text)}</div>`;
-    if (msg.image) content += `<img class="msg-img" src="${msg.image}" onclick="window.open(this.src)">`;
-    const time = new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    el.innerHTML = `
-        <div class="msg-avatar" style="color:${msg.color}">${initial}</div>
-        <div class="msg-content">
-            <div class="msg-header">
-                <span class="msg-name" style="color:${msg.color}">${escapeHtml(msg.username)}</span>
-                <span class="msg-time">${time}</span>
-            </div>
-            ${content}
-        </div>
-    `;
+    el.innerHTML='<div class="msg-avatar" style="color:'+m.color+'">'+avHtml+'</div><div class="msg-content"><div class="msg-header"><span class="msg-name" style="color:'+m.color+'">'+escapeHtml(m.username)+"</span>"+badges+roleBadge+'<span class="msg-time">'+time+"</span></div>"+content+'</div><div class="msg-actions">'+actions+"</div>";
     msgs.appendChild(el);
 }
+function renderReactions(id,reactions){let h="";for(const[emoji,users]of Object.entries(reactions||{})){if(!users.length)continue;const mine=users.includes(username)?"mine":"";h+='<span class="reaction '+mine+'" onclick="socket.emit(\'react\',{id:\''+id+"',emoji:'"+emoji+"'})\">"+emoji+" "+users.length+"</span>";}return h;}
+</script>
+<script>
+function editMsg(id){const text=prompt("Edit message:");if(text!==null)socket.emit("editMessage",{id:id,text:text});}
+function deleteMsg(id){if(confirm("Delete this message?"))socket.emit("deleteMessage",{id:id});}
+function reactPicker(id){const emoji=prompt("Emoji:");if(emoji)socket.emit("react",{id:id,emoji:emoji});}
+function sendMessage(){const input=document.getElementById("msg-input");const text=input.value.trim();if(!text)return;socket.emit("message",{text:text});input.value="";}
+document.getElementById("msg-input").addEventListener("keydown",e=>{if(e.key==="Enter")sendMessage();else socket.emit("typing");});
+document.getElementById("img-input").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;const fd=new FormData();fd.append("image",file);const res=await fetch("/upload",{method:"POST",body:fd});const d=await res.json();if(d.url)socket.emit("message",{text:"",image:d.url});e.target.value="";});
 
-function sendMessage() {
-    const input = document.getElementById('msg-input');
-    const text = input.value.trim();
-    if (!text) return;
-    socket.emit('message', { text });
-    input.value = '';
+// Emoji picker
+function toggleEmoji(){document.getElementById("emoji-picker").classList.toggle("open");}
+(()=>{const el=document.getElementById("emoji-picker");EMOJIS.forEach(e=>{const s=document.createElement("span");s.textContent=e;s.onclick=()=>{document.getElementById("msg-input").value+=e;el.classList.remove("open");};el.appendChild(s);});})();
+
+// Avatar
+function openAvatarModal(){document.getElementById("avatar-modal").classList.add("open");}
+function closeAvatarModal(){document.getElementById("avatar-modal").classList.remove("open");}
+async function uploadAvatar(){
+    const file=document.getElementById("avatar-file").files[0];
+    if(!file)return;
+    const fd=new FormData();fd.append("image",file);fd.append("username",username);
+    const res=await fetch("/setAvatar",{method:"POST",body:fd});
+    const d=await res.json();
+    if(d.url){myAvatar=d.url;closeAvatarModal();alert("Avatar set! Rejoin to see it.");}
 }
 
-document.getElementById('msg-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') sendMessage();
-    else socket.emit('typing');
-});
+// Admin
+function openAdmin(){document.getElementById("admin-modal").classList.add("open");socket.emit("admin",{action:"getUsers"});}
+function closeAdmin(){document.getElementById("admin-modal").classList.remove("open");}
+function adminAction(action,role){const target=document.getElementById("admin-target").value.trim();if(!target)return;socket.emit("admin",{action:action,target:target,role:role});}
+function adminCreateChannel(){const name=document.getElementById("admin-channel").value.trim();if(name)socket.emit("admin",{action:"createChannel",name:name});}
+function adminDeleteChannel(){const name=document.getElementById("admin-channel").value.trim();if(name&&confirm("Delete #"+name+"?"))socket.emit("admin",{action:"deleteChannel",name:name});}
 
-document.getElementById('img-input').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('image', file);
-    const res = await fetch('/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.url) socket.emit('message', { text: '', image: data.url });
-    e.target.value = '';
-});
-
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+// Badges
+function initBadgeGrid(){
+    const el=document.getElementById("badge-grid");el.innerHTML="";
+    for(const[key,val]of Object.entries(BADGES)){
+        const item=document.createElement("div");item.className="badge-item"+(selectedBadge===key?" active":"");
+        item.textContent=val.emoji+" "+val.label;item.onclick=()=>{selectedBadge=key;document.querySelectorAll(".badge-item").forEach(i=>i.classList.remove("active"));item.classList.add("active");};
+        el.appendChild(item);
+    }
 }
+function adminAddBadge(){const target=document.getElementById("admin-target").value.trim();if(!target||!selectedBadge)return;socket.emit("admin",{action:"addBadge",target:target,badge:selectedBadge});}
+function adminRemoveBadge(){const target=document.getElementById("admin-target").value.trim();if(!target||!selectedBadge)return;socket.emit("admin",{action:"removeBadge",target:target,badge:selectedBadge});}
+
+// Utils
+function playNotif(){if(document.hidden)document.title="* NullSec";}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)document.title="NullSec";});
+function autoScroll(){const m=document.getElementById("messages");m.scrollTop=m.scrollHeight;}
+function escapeHtml(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML;}
 </script>
 </body>
 </html>
